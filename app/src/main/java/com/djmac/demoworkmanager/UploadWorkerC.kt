@@ -6,7 +6,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.djmac.demoworkmanager.MainActivity.Companion.TAG
 
-class UploadWorker(context: Context, workerParameters: WorkerParameters) :
+class UploadWorkerC(context: Context, workerParameters: WorkerParameters) :
     Worker(context, workerParameters) {
     override fun doWork(): Result {
         try {
@@ -18,8 +18,8 @@ class UploadWorker(context: Context, workerParameters: WorkerParameters) :
     }
 
     private fun uploadData() {
-        Log.d(TAG, "Uploading data to server...")
+        Log.d(TAG, "Uploading data to server for C...")
         Thread.sleep(20000)
-        Log.d(TAG, "Data Uploaded Successfully")
+        Log.d(TAG, "Data Uploaded Successfully for C")
     }
 }

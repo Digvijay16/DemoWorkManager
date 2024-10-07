@@ -6,14 +6,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.work.Constraints
 import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import com.djmac.demoworkmanager.databinding.ActivityMainBinding
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,51 +27,39 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnOneTime.setOnClickListener {
-            startOneTimeWork()
+            startOneTimeRequestChainWork()
         }
 
-        binding.btnPeriodic.setOnClickListener {
-
-            startPeriodicTimeRequest()
-        }
     }
 
-    private fun startPeriodicTimeRequest() {
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        /*
-        The minimum interval for periodic work is 15 minutes.
-        If you specify a shorter interval,
-        WorkManager will automatically adjust it to 15 minutes.
-        */
-        val uploadWorkRequest = PeriodicWorkRequestBuilder<UploadWorker>(
-            15,
-            TimeUnit.MINUTES
-        ).setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(applicationContext).enqueue(uploadWorkRequest)
-        Log.d(TAG, "Periodic work started")
-        observeWorkRequestStatus(uploadWorkRequest)
-    }
-
-    private fun startOneTimeWork(){
+    private fun startOneTimeRequestChainWork(){
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresCharging(true)
             .build()
 
-        val uploadWorkerRequest = OneTimeWorkRequestBuilder<UploadWorker>()
+        val workRequestA = OneTimeWorkRequestBuilder<UploadWorkerA>()
             .setConstraints(constraints)
             .build()
 
-        WorkManager.getInstance(applicationContext).enqueue(uploadWorkerRequest)
+        val workRequestB = OneTimeWorkRequestBuilder<UploadWorkerB>()
+            .setConstraints(constraints)
+            .build()
+
+        val workRequestC = OneTimeWorkRequestBuilder<UploadWorkerC>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(applicationContext)
+            .beginWith(workRequestA)
+            .then(workRequestB)
+            .then(workRequestC)
+            .enqueue()
+
         Log.d(TAG, "One time work started")
-        observeWorkRequestStatus(uploadWorkerRequest)
+        observeWorkRequestStatus(workRequestA)
     }
 
     private fun observeWorkRequestStatus(workRequest: WorkRequest) {
