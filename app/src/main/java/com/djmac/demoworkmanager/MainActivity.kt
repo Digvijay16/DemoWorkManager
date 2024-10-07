@@ -6,7 +6,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.work.Constraints
 import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -30,38 +29,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnOneTime.setOnClickListener {
-            startOneTimeWork()
+            startOneTimeWorkRequest()
         }
 
-        binding.btnPeriodic.setOnClickListener {
-
-            startPeriodicTimeRequest()
-        }
     }
 
-    private fun startPeriodicTimeRequest() {
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        /*
-        The minimum interval for periodic work is 15 minutes.
-        If you specify a shorter interval,
-        WorkManager will automatically adjust it to 15 minutes.
-        */
-        val uploadWorkRequest = PeriodicWorkRequestBuilder<UploadWorker>(
-            15,
-            TimeUnit.MINUTES
-        ).setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(applicationContext).enqueue(uploadWorkRequest)
-        Log.d(TAG, "Periodic work started")
-        observeWorkRequestStatus(uploadWorkRequest)
-    }
-
-    private fun startOneTimeWork(){
+    private fun startOneTimeWorkRequest() {
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -83,7 +57,10 @@ class MainActivity : AppCompatActivity() {
             .observe(this) { workInfo ->
                 if (workInfo != null) {
                     when (workInfo.state) {
-                        WorkInfo.State.SUCCEEDED -> Log.d(TAG, "Work succeeded")
+                        WorkInfo.State.SUCCEEDED -> {
+                            Log.d(TAG, "Work succeeded")
+                            repeatOneTimeWorkRequest(30)
+                        }
                         WorkInfo.State.FAILED -> Log.d(TAG, "Work failed")
                         WorkInfo.State.RUNNING -> Log.d(TAG, "Work is running")
                         WorkInfo.State.ENQUEUED -> Log.d(TAG, "Work is enqueued")
@@ -93,5 +70,20 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+    }
+
+    private fun repeatOneTimeWorkRequest(delayInSeconds: Long) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val repeatWorkRequest = OneTimeWorkRequestBuilder<UploadWorker>()
+            .setConstraints(constraints)
+            .setInitialDelay(delayInSeconds, TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(applicationContext).enqueue(repeatWorkRequest)
+        Log.d(TAG, "Repeat One Time Work Request started ")
+        observeWorkRequestStatus(repeatWorkRequest)
     }
 }

@@ -19,7 +19,7 @@ class UploadWorker(context: Context, workerParameters: WorkerParameters) :
 
     private fun uploadData() {
         Log.d(TAG, "Uploading data to server...")
-        Thread.sleep(20000)
+        Thread.sleep(10000)
         Log.d(TAG, "Data Uploaded Successfully")
     }
 }
